@@ -18,13 +18,13 @@ for scriptI = 1:size(VaryingArray,2)
     for i = 1:size(TrainingImgs, 2)
         ImgData = TrainingImgs(:,i);
         ImgPixels = reshape(ImgData, [28,28]);
-        ImgHogFeatures = extractHOGFeatures(ImgPixels);
+        ImgHogFeatures = extractHOGFeatures(ImgPixels, 'CellSize', [5 5]);
         TrainingImgHogFeatures = [TrainingImgHogFeatures; ImgHogFeatures];
     end
     % Rows are the images.. columns are the features
     
-%     SVMTrainingImgs = double(TrainingImgHogFeatures);
-    SVMTrainingImgs = (double(TrainingImgs))';
+    SVMTrainingImgs = double(TrainingImgHogFeatures);
+%     SVMTrainingImgs = (double(TrainingImgs))';
     SVMTrainingImgLabels = (double(TrainingImgsLabels))'; % Rows are the labels.. only 1 column
     
     SVMParams = templateSVM('KernelFunction', 'Polynomial');
@@ -44,12 +44,12 @@ for scriptI = 1:size(VaryingArray,2)
     for i = 1:size(TestSet, 2)
         ImgData = TestSet(:,i);
         ImgPixels = reshape(ImgData, [28,28]);
-        ImgHogFeatures = extractHOGFeatures(ImgPixels);
+        ImgHogFeatures = extractHOGFeatures(ImgPixels, 'CellSize', [5 5]);
         TestImgHogFeatures = [TestImgHogFeatures; ImgHogFeatures];
     end
     
-%     SVMTestData = double(TestImgHogFeatures);
-    SVMTestData = (double(TestSet))';
+    SVMTestData = double(TestImgHogFeatures);
+%     SVMTestData = (double(TestSet))';
     SVMTestLabels = predict(SVMModel, SVMTestData);
     
     Accuracy = CalculateAccuracy(SVMTestLabels, TestLabels');
