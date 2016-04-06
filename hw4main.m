@@ -4,43 +4,15 @@ clc;
 
 load('digits.mat');
 % VaryingArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-% VaryingArray = [100, 200, 400, 784, 1600, 2000, 3000, 4000, 5000, 6000, 8000, 10000];
+% VaryingArray = [100, 200, 400, 784, 1600, 2000, 3000]; % 4000, 5000, 6000, 8000, 10000];
 VaryingArray = [1];
+VA = [];
 AccArray = [];
 for scriptI = 1:size(VaryingArray,2)
     % Getting a reduced number of training images to train on
-    trainingSize = 1000;
+    trainingSize = 5000;
     [TrainingImgs , TrainingArray] = SelectTrainingSamples(trainImages, trainingSize);
     TrainingImgsLabels = (trainLabels (:, TrainingArray));
-    
-%     Get the Mean matrix and the Eigen vectors of the reduced training images
-%     [Mean, EVectors, EValues] = hw1FindEigendigits(TrainingImgs);
-%     currentSum = 0;
-%     eigenSum = sum(EValues);
-%     numEigen = 0;
-%     for i = 1:size(EValues, 1)
-%         eigenValue = EValues(i,1);
-%         currentSum = currentSum + eigenValue;
-%         if (currentSum/eigenSum > 0.99)
-%             numEigen = i;
-%             break;
-%         end
-%     end
-%     EVecReduced = EVectors(:,1:150);
-%     EVecReduced = EVectors(:,1:numEigen);
-
-%     numTrainImgsToClassify = trainingSize;
-%     [TrainImgsToClassify, TrainingArrayClassify] = SelectTrainingSamples(trainImages, numTrainImgsToClassify);
-%     AMat = bsxfun(@minus, double(TrainImgsToClassify), Mean);
-%     ProjectedTrainingImgs = (EVecReduced')*double(AMat);
-%     ReclaimedTrainImgs = EVecReduced * ProjectedTrainingImgs;
-    
-%     ProjectedTestImgs = (EVecReduced') * double(HardTestSet);
-%     ProjectedTestLabels = HardTestLabels;
-%     ReclaimedTestImgs =  EVecReduced * ProjectedTestImgs;
-%     K = 3;
-%     [Accuracy , testImgLabels] = CalculateAccuracy(ProjectedTrainingImgs', ProjectedTestImgs', TrainingArrayClassify, trainLabels, ProjectedTestLabels, K);
-%     AccArray = [AccArray, Accuracy];
 
     TrainingImgHogFeatures = [];
     for i = 1:size(TrainingImgs, 2)
@@ -49,14 +21,13 @@ for scriptI = 1:size(VaryingArray,2)
         ImgHogFeatures = extractHOGFeatures(ImgPixels);
         TrainingImgHogFeatures = [TrainingImgHogFeatures; ImgHogFeatures];
     end
-    
     % Rows are the images.. columns are the features
     
-    % SVMTrainingImgs = (double(TrainingImgs))';
-    SVMTrainingImgs = double(TrainingImgHogFeatures);
+%     SVMTrainingImgs = double(TrainingImgHogFeatures);
+    SVMTrainingImgs = (double(TrainingImgs))';
     SVMTrainingImgLabels = (double(TrainingImgsLabels))'; % Rows are the labels.. only 1 column
     
-    SVMParams = templateSVM('KernelFunction', 'linear');
+    SVMParams = templateSVM('KernelFunction', 'Polynomial');
     SVMModel = fitcecoc(SVMTrainingImgs, SVMTrainingImgLabels, 'Learners', SVMParams, 'Coding', 'onevsall');
     
     sizeTest = size(testImages, 4);
@@ -77,8 +48,8 @@ for scriptI = 1:size(VaryingArray,2)
         TestImgHogFeatures = [TestImgHogFeatures; ImgHogFeatures];
     end
     
-    % SVMTestData = (double(TestSet))';
-    SVMTestData = double(TestImgHogFeatures);
+%     SVMTestData = double(TestImgHogFeatures);
+    SVMTestData = (double(TestSet))';
     SVMTestLabels = predict(SVMModel, SVMTestData);
     
     Accuracy = CalculateAccuracy(SVMTestLabels, TestLabels');
